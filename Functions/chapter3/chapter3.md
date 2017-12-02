@@ -214,3 +214,25 @@ assert.strictEqual
 {ok, strictEqual} = require 'assert'
 
 解构赋值
+
+arr.slice[0..]
+当有人传给你一个数组，而你希望对其进行修改以满足自己的需要时，使用数组的副本通常是一个得体的做法。
+
+hash 解构的特点：假如已知键名的话，就能快速地取到对应的值。
+如果要频繁地检测一个hash中是否有对应的值的话，应当使用其他类型的数据结构。
+
+```javascript
+do {
+  user.harangue()
+} while (!user.paidInFull)
+
+// coffee version
+user.harangue()
+user.harangue() until user.paidInFull
+
+doAndRepeatUntil = (func, condition) ->
+  func.call this
+  func.call this until condition()
+
+doAndRepeatUntil user.harangue, -> user.paidInFull
+```

@@ -3,19 +3,20 @@
   var GRID_SIZE, MIN_WORD_LENGTH, alphabet, count, fs, grid, inRange, inputCallback, isInteger, isWord, j, k, letter, moveCount, owl2, printGrid, promptForTile1, promptForTile2, randomLetter, ref, ref1, score, scoreMove, stdin, strToCoordinates, tileCounts, tileValues, totalTiles, usedWords, word, wordList, wordsThroughTile, x, y,
     indexOf = [].indexOf;
 
-  fs = require('fs');
+  fs = require('fs'); // 引用库 fs
 
-  owl2 = fs.readFileSync('OWL2.txt', 'utf8');
+  owl2 = fs.readFileSync('OWL2.txt', 'utf8'); // 读取文件OWL2.txt产生字串owl2
 
-  GRID_SIZE = 5;
+  GRID_SIZE = 5; // 网格大小
 
-  MIN_WORD_LENGTH = 2;
+  MIN_WORD_LENGTH = 2; // 最小有效字长度
 
-  wordList = owl2.match(/^(\w+)/mg);
+  wordList = owl2.match(/^(\w+)/mg); // 过滤出单词
 
   wordList = (function() {
     var j, len, results;
     results = [];
+    // 过滤出符合网格尺寸的单词
     for (j = 0, len = wordList.length; j < len; j++) {
       word = wordList[j];
       if (word.length <= GRID_SIZE) {
@@ -25,21 +26,21 @@
     return results;
   })();
 
-  isWord = function(str) {
+  isWord = function(str) { // 字串有效性判断
     return indexOf.call(wordList, str) >= 0;
   };
 
-  inRange = function(x, y) {
+  inRange = function(x, y) { // 坐标有效性判断
     return (0 <= x && x < GRID_SIZE) && (0 <= y && y < GRID_SIZE);
   };
 
-  isInteger = function(num) {
+  isInteger = function(num) { // 判断输入的数字是否为整数
     return num === Math.round(num);
   };
 
   // Probabilities are taken from Scrabble, except that there are no blanks.
   // See http://www.hasbro.com/scrabble/en_us/saqGeneral.cfm
-  tileCounts = {
+  tileCounts = { // 不同字母相对权重，出现的概率
     A: 9,
     B: 2,
     C: 2,
@@ -83,9 +84,9 @@
       results.push(letter);
     }
     return results;
-  })()).sort();
+  })()).sort(); // [A, B, .. , Z]
 
-  randomLetter = function() {
+  randomLetter = function() { // 随机产生一个字母
     var j, len, randomNumber, x;
     randomNumber = Math.ceil(Math.random() * totalTiles);
     x = 1;
@@ -99,25 +100,15 @@
   };
 
   // grid is a 2D array: grid[col][row], where 0, 0 is the upper-left corner
-  // grid = [ col, col, col, col, col,
-  //          col, col, col, col, col,
-  //          col, col, col, col, col,
-  //          col, col, col, col, col,
-  //          col, col, col, col, col]
-  // grid = [ [ 'A', 'W', 'U', 'W', 'I' ],
-  //         [ 'A', 'T', 'L', 'C', 'M' ],
-  //         [ 'A', 'F', 'E', 'E', 'P' ],       0----->y
-  //         [ 'C', 'O', 'R', 'D', 'O' ],       |
-  //         [ 'H', 'H', 'A', 'I', 'U' ] ]      |
   grid = (function() {
     var j, ref, results;
     results = [];
-    // row        x
+    // 此处的grid为列数组
     for (x = j = 0, ref = GRID_SIZE; 0 <= ref ? j < ref : j > ref; x = 0 <= ref ? ++j : --j) {
       results.push((function() {
         var k, ref1, results1;
         results1 = [];
-        // col
+        // grid[col][row]
         for (y = k = 0, ref1 = GRID_SIZE; 0 <= ref1 ? k < ref1 : k > ref1; y = 0 <= ref1 ? ++k : --k) {
           results1.push(randomLetter());
         }
@@ -127,17 +118,18 @@
     return results;
   })();
 
-  // console.log grid
-  printGrid = function() {
+  printGrid = function() { // printGrid在终端画出网格grid
     var i, row, rowSeparator, rowStrings, rows;
     // Transpose the grid so we can draw rows
     rows = (function() {
       var j, ref, results;
       results = [];
+      // 将列数组转为行数组 [这里面是不同的行[这里是不同的列]，[这里是不同的列]，[这里是不同的列]，[这里是不同的列]，[这里是不同的列]，[这里是不同的列]]
       for (x = j = 0, ref = GRID_SIZE; 0 <= ref ? j < ref : j > ref; x = 0 <= ref ? ++j : --j) {
         results.push((function() {
           var k, ref1, results1;
           results1 = [];
+          // rows[row][col]
           for (y = k = 0, ref1 = GRID_SIZE; 0 <= ref1 ? k < ref1 : k > ref1; y = 0 <= ref1 ? ++k : --k) {
             results1.push(grid[y][x]);
           }
@@ -146,7 +138,6 @@
       }
       return results;
     })();
-    // console.log rows
     rowStrings = (function() {
       var j, len, results;
       results = [];
@@ -197,40 +188,42 @@
     Z: 10
   };
 
-  moveCount = 0;
+  moveCount = 0; // 游戏步骤记录
 
-  score = 0;
+  score = 0; // 游戏得分
 
-  usedWords = [];
+  usedWords = []; // 已经出现过的word
 
   scoreMove = function(grid, swapCoordinates) {
     var j, k, len, len1, moveScore, multiplier, newWords, words, x1, x2, y1, y2;
     ({x1, y1, x2, y2} = swapCoordinates);
     words = wordsThroughTile(grid, x1, y1).concat(wordsThroughTile(grid, x2, y2));
-    moveScore = multiplier = 0;
-    newWords = [];
+    moveScore = multiplier = 0; // 初始化
+    newWords = []; // 初始化
     for (j = 0, len = words.length; j < len; j++) {
       word = words[j];
       if (!(indexOf.call(usedWords, word) < 0 && indexOf.call(newWords, word) < 0)) {
         continue;
       }
-      multiplier++;
+      multiplier++; // new word 的数量
+      // 累加每个word对应的score
       for (k = 0, len1 = word.length; k < len1; k++) {
         letter = word[k];
         moveScore += tileValues[letter];
       }
-      newWords.push(word);
+      newWords.push(word); // 更新newWords数组
     }
-    usedWords = usedWords.concat(newWords);
-    moveScore *= multiplier;
+    usedWords = usedWords.concat(newWords); // 用newWords更新usedWords
+    moveScore *= multiplier; // 一次坐标字母交换，生成的新字越多，分数变动moveScore的愈多
     return {moveScore, newWords};
   };
 
-  wordsThroughTile = function(grid, x, y) {
+  wordsThroughTile = function(grid, x, y) { // 通过特定坐标的words
     var addTiles, j, k, l, len, length, offset, range, ref, ref1, ref2, results, str, strings;
     strings = [];
+    // 确定字符的长度
     for (length = j = ref = MIN_WORD_LENGTH, ref1 = GRID_SIZE; ref <= ref1 ? j <= ref1 : j >= ref1; length = ref <= ref1 ? ++j : --j) {
-      range = length - 1;
+      range = length - 1; // 从起点起，移动的长度
       addTiles = function(func) {
         var i;
         return strings.push(((function() {
@@ -240,11 +233,12 @@
             results.push(func(i));
           }
           return results;
-        })()).join(''));
+        })()).join('')); // 添加一个字串到strings数组中
       };
+      // offset坐标某侧移动的距离，字串的起点
       for (offset = k = 0, ref2 = length; 0 <= ref2 ? k < ref2 : k > ref2; offset = 0 <= ref2 ? ++k : --k) {
-        // Vertical
-        if (inRange(x - offset, y) && inRange(x - offset + range, y)) {
+        // Vertical                                          # 此处的grid为行数组
+        if (inRange(x - offset, y) && inRange(x - offset + range, y)) { // 特定长度字符的起点与终点有效性检测
           addTiles(function(i) {
             return grid[x - offset + i][y];
           });
@@ -279,7 +273,8 @@
     return results;
   };
 
-  console.log("Welcome to 5x5!");
+  // CMD-LINE IO
+  console.log("Welcome to 5x5!"); // (1)
 
   for (x = j = 0, ref = GRID_SIZE; 0 <= ref ? j < ref : j > ref; x = 0 <= ref ? ++j : --j) {
     for (y = k = 0, ref1 = GRID_SIZE; 0 <= ref1 ? k < ref1 : k > ref1; y = 0 <= ref1 ? ++k : --k) {
@@ -292,11 +287,12 @@
     }
   }
 
-  if (usedWords.length !== 0) {
+  if (usedWords.length !== 0) { // (2)
+    // 输出多行字串，字串定界符 """
     console.log(`Initially used words:\n${usedWords.join(', ')}`);
   }
 
-  console.log("Please choose a tile in the form (x, y).");
+  console.log("Please choose a tile in the form (x, y)."); // (3)
 
   stdin = process.openStdin();
 
@@ -305,16 +301,17 @@
   inputCallback = null;
 
   stdin.on('data', function(input) {
-    return inputCallback(input);
+    return inputCallback(input); // NOTE: 绑定事件
   });
 
   promptForTile1 = function() {
     printGrid();
-    console.log("Please enter coordinates for the first tile.");
-    return inputCallback = function(input) {
+    console.log("Please enter coordinates for the first tile."); // stdin.on 'data', (input) -> inputCallback input
+    return inputCallback = function(input) { // 事件处理，输入回调
       var e;
       try {
         ({x, y} = strToCoordinates(input));
+        console.log({x, y});
       } catch (error) {
         e = error;
         console.log(e);
@@ -350,24 +347,24 @@
         ({moveScore, newWords} = scoreMove(grid, {x1, y1, x2, y2}));
         if (moveScore !== 0) {
           console.log(`You formed the following word(s):\n${newWords.join(', ')}\n`);
-          score += moveScore;
+          score += moveScore; // 更新分数score
         }
-        moveCount++;
+        moveCount++; // 移动的次数，记录游戏的步骤，输入一对坐标(x1,y1),(x2,y2)为移动一次（也可以说调用一次 promptForTile2(x1,y1)
         console.log(`Your score after ${moveCount} moves: ${score}`);
         return promptForTile1();
       }
     };
   };
 
-  strToCoordinates = function(input) {
+  strToCoordinates = function(input) { // command-line 输入的都为字串
     var halves;
-    halves = input.split(',');
+    halves = input.split(','); // str：input 转为 array of strings：halves
     if (halves.length === 2) {
       x = parseFloat(halves[0]);
       y = parseFloat(halves[1]);
-      if (!isInteger(x) || !isInteger(y)) {
+      if (!isInteger(x) || !isInteger(y)) { // 整数判断
         return console.log("Each coordinate must be an integer.");
-      } else if (!inRange(x - 1, y - 1)) {
+      } else if (!inRange(x - 1, y - 1)) { // 范围判断：起点（0，0）变为（1，1）
         return console.log(`Each coordinate must be between 1 and ${GRID_SIZE}`);
       } else {
         return {x, y};
@@ -377,6 +374,6 @@
     }
   };
 
-  promptForTile1();
+  promptForTile1(); // (4)
 
 }).call(this);
